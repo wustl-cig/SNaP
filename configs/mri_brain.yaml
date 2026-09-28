@@ -1,0 +1,153 @@
+# ============================================================================
+# SNaP -- multi-coil CS-MRI, fastMRI BRAIN (320x320).
+#
+# These are the settings the released `brain_r8_30db` checkpoint was trained with.
+# Four MRI checkpoints ship, one per (acceleration, measurement-SNR) cell --
+# brain_r4_20db, brain_r4_30db, brain_r8_20db, brain_r8_30db -- and each is only valid at
+# its own operating point. This config is the R = 8, 30 dB one:
+#     python run.py --config configs/mri_brain.yaml --set experiment.run_id=brain_r8
+#
+# Other operating points are one override away, e.g. R = 4 at 20 dB:
+#     --set methods.cs_mri.acceleration_ratio=4 methods.cs_mri.input_snr_db=20
+#
+# fastMRI is credentialed and cannot be downloaded by scripts/download_data.py --
+# see docs/DATA.md for how to obtain it and build the slice cache.
+# ============================================================================
+experiment:
+  stage: "cs_mri"
+  phase: "train"
+  seed: 42
+  run_id:
+
+paths:
+  output_root: "./results"
+
+data:
+  loader: fastmri_brain
+  image_size: [320, 320]
+  raw_dir:  "./data/fastmri_brain_multicoil"
+  maps_dir: "./data/fastmri_brain_multicoil/real/acceleration_rate_1_smps_hat_method_eps"
+  # Volume-level split (each fastMRI file is a distinct patient): 615/77/77 volumes ->
+  # 4305/539/539 slices after dropping the first 4 and last 5 slices of each volume.
+  index_json: "./data/index_AXT2_320.json"
+  crop: 320
+  slice_start: 4
+  slice_end: -5
+  max_len:
+  # Coil counts vary per volume; maps are zero-padded to max_coils. A coil with S_c = 0
+  # contributes nothing to A or A^H. This is safe for the posterior source ONLY because
+  # apply_pinv_reg solves the image-space normal equations -- A^H annihilates the padded
+  # coils. It also means every split batches normally.
+  max_coils: 20
+  # Precomputed cache of the CROPPED arrays -- effectively mandatory, not an optimisation:
+  # reading raw volumes at train time pulls ~100 MB per sample at random, which makes
+  # training ~30x I/O bound. Holds raw unnormalised/unpadded arrays, so `normalize` and
+  # `max_coils` can change without a rebuild. Build it with:
+  #     python dataset/build_brain_cache.py --config configs/mri_brain.yaml --workers 8
+  cache_dir: "./data/fastmri_brain_cache320"
+  # Per-slice /max|x0|. Makes the metric's per-image data_range exactly 1. MEASURED under
+  # this normalization: per-component std 0.1841 | sqrt(E|x|^2) 0.2653.
+  normalize: max
+
+dataloader:
+  batch_size: 4
+  num_workers: 8               # I/O, not compute, is the throughput risk here
+  pin_memory: false
+  shuffle_train: true
+
+distributed:
+  use_ddp: true
+  backend: "nccl"
+  gpus: [0, 1, 2, 3]
+  master_addr: "localhost"
+  master_port: 42279
+
+logging:
+  log_every: 1
+  validate: true
+  save_every: 5
+  save_img_every: 5
+  keep_last_n: 0
+  val_seed: 1234
+
+training:
+  # 4,305 train slices; steps_per_epoch is split across ranks, so 2152 x batch 4 makes a
+  # config-epoch ~= two data passes at 4 GPUs. 80 epochs ~ 43k optimizer steps.
+  epochs: 80
+  steps_per_epoch: 2152
+  lr: 1.0e-4
+  lr_min: 1.0e-6
+  lr_schedule: cosine
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  grad_accum_steps: 1
+  use_ema: false
+  ema_decay: 0.9998            # horizon ~1/(1-d) optimizer steps; scale it with the step count
+  ema_start_epoch: 4
+
+# -- SNaP objective ------------------------------------------------------
+snap:
+  source: posterior
+  # aty = A^H y, the zero-filled adjoint -- the standard conditioning input for
+  # conditional networks on inverse problems. m_y would put a regularized CG solve into
+  # the network's input, confounding what the network learned with what the solver
+  # supplied. NOTE the SOURCE still centres on m_y (x1 ~ N(m_y, tau^2 W)); cond_anchor
+  # controls only what reaches the NETWORK, whose input is then tau-free.
+  cond_anchor: aty
+  # tau is the working-prior scale and sets the source regularization lam = sigma^2/tau^2.
+  # Too large a tau under-regularizes: the CONVERGED anchor m_y then scores worse than a
+  # smaller tau, and only an early-stopped CG hides it by supplying regularization by
+  # accident. Small tau keeps the source close to the anchor -- a reconstruction-quality
+  # operating point rather than a wide posterior-sampling one.
+  tau: 0.25
+  p_ratio: 0.5
+  # Reserve 10% of the r!=t samples for the (r~0, t~1) corner -- the exact slice one-step
+  # sampling evaluates at. Without it the logit-normal schedule reaches that corner with
+  # probability 7.3e-4 and the one-step map is effectively untrained where it is scored.
+  corner_frac: 0.1
+  logit_mu: 0.0
+  logit_sigma: 1.0
+  weight_p: 1.0
+  weight_c: 1.0e-3
+  t_eps: 1.0e-3
+
+# -- MRI problem (MRIProblem kwargs; 'noise' -> sigma) ------------------------
+methods:
+  cs_mri:
+    total_lines: 320
+    acceleration_ratio: 8       # R = 8 (the released checkpoint); 4 is the other setting
+    pattern: random
+    orientation: vertical
+    image_size: 320
+    random_mask: false          # false = one FIXED mask chosen by mask_seed (eval always pins it)
+    mask_seed: 0
+    # CG iterations for the source's normal-equation solve. The source is N(m_y, tau^2 W)
+    # EXACTLY only for an exact solve; 200 leaves it fully converged at this tau. m_y
+    # still centres the source even with cond_anchor=aty, so this matters either way.
+    cg_iters: 200
+    # Measurement noise as an SNR rather than an absolute std: per-sample noise scaled so
+    # EVERY slice lands on exactly this SNR. sigma then becomes PER-SAMPLE, and so do
+    # lam = sigma^2/tau^2 and the network's sigma-conditioning. `noise` is the absolute-std
+    # fallback and is IGNORED while input_snr_db is set.
+    input_snr_db: 30
+    noise: 0.0036
+
+# -- Model (2-channel complex; net input = 2*in_ch = 4, no coverage channel) --
+model:
+  resume_path:
+  in_ch: 2
+  out_ch: 2
+  input_height: 320
+  # 40.7M params. ch must stay divisible by 32 (GroupNorm num_groups=32).
+  ch: 32
+  ch_mult: [1, 2, 4, 8, 8]
+  num_res_blocks: 4
+  attn_resolutions: [40]
+  dropout: 0.0
+  resamp_with_conv: True
+  cond_r: true
+  cond_sigma: true
+  sigma_emb_scale: 10.0
+
+sample:
+  steps: 1

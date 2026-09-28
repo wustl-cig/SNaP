@@ -1,0 +1,5 @@
+# Only needed for the CS-MRI configs (dataset/fastmri_brain.py)
+h5py
+lmdb
+sigpy
+scipy

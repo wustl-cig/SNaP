@@ -1,0 +1,154 @@
+# ============================================================================
+# SNaP -- AFHQ-Cat (256x256).
+#
+# These are the settings the released AFHQ checkpoints were trained with:
+#     python run.py --config configs/afhq.yaml --set experiment.stage=sr snap.tau=0.1
+# retrains `afhq_sr` from scratch. Set snap.tau per operator:
+#
+#   stage            tau    epochs   released checkpoint
+#   inpainting       0.10     80     afhq_inpaint
+#   box_inpainting   0.50     80     afhq_box
+#   blur_gauss       0.10     80     afhq_deblur
+#   sr               0.10    120     afhq_sr
+#
+# tau is measured per operator as the W-weighted conditional spread
+# tau^2 = <d, W d>/tr(W), d = x - xhat(y) with xhat the linear-MMSE (Wiener) estimate:
+# the mean posterior variance the source has to cover. tau ~ 1 sits ABOVE the data rms,
+# where the source degenerates to an uninformative prior draw on the null space.
+# ============================================================================
+experiment:
+  stage: "inpainting"          # inpainting | box_inpainting | denoising | blur_gauss | sr
+  phase: "train"               # train | test
+  seed: 42
+  run_id:
+
+paths:
+  output_root: "./results"
+
+data:
+  root: "./data/afhq_cat"      # python scripts/download_data.py afhq
+  size: 256
+  grayscale: false
+  normalize: true
+  center_crop: false
+  max_len:
+  # Random horizontal flip, TRAIN SPLIT ONLY (validation/test stay deterministic, so the
+  # val curve and every eval remain comparable). AFHQ-Cat is left/right symmetric as a
+  # distribution, so this is a free 2x on 5,153 images. The flip is applied to x BEFORE
+  # make_observation, so a fixed inpainting mask is still ONE fixed operator A.
+  augment_hflip: true
+
+dataloader:
+  batch_size: 2                # PER-GPU; 2 x 4 accum x 4 gpus = effective batch 32
+  num_workers: 4
+  pin_memory: false
+  shuffle_train: true
+
+distributed:
+  use_ddp: true
+  backend: "nccl"
+  gpus: [0, 1, 2, 3]
+  master_addr: "localhost"
+  master_port: 42277
+
+logging:
+  log_every: 5                 # gates BOTH the metric line and the validation pass
+  validate: true               # run the held-out validation pass (~40% of epoch time)
+  save_every: 5
+  save_img_every: 5
+  keep_last_n: 0               # 0 = never rotate
+  val_seed: 1234
+
+training:
+  # 80 epochs x 2,000 micro-batches x batch 2 = 320,000 image presentations, ~62 passes
+  # over the 5,153-image train split. An "epoch" here is a fixed draw WITH REPLACEMENT of
+  # steps_per_epoch x batch_size images, decoupled from len(dataset). `epochs` also sets
+  # the cosine horizon (T_max).
+  epochs: 80                   # 120 for sr
+  steps_per_epoch: 2000        # GLOBAL micro-batches, split across ranks
+  lr: 2.0e-4
+  lr_min: 1.0e-6
+  lr_schedule: cosine
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  grad_accum_steps: 4          # effective batch = 2 x 4 x 4 gpus = 32
+  use_ema: false
+  ema_decay: 0.9999
+  ema_start_epoch: 20
+
+# -- SNaP objective ------------------------------------------------------
+snap:
+  source: posterior
+  cond_anchor: aty
+  tau: 0.10                    # PER-OPERATOR -- see the table at the top of this file
+  p_ratio: 0.5
+  corner_frac: 0.1
+  logit_mu: 0.0
+  logit_sigma: 1.0
+  weight_p: 1.0
+  weight_c: 1.0e-3
+  weight_norm: ema             # normalise the residual by its running mean -> c is dimensionless
+  weight_norm_decay: 0.99
+  beta: 0.0                    # plain MSE metric
+  gamma_max: 10000.0
+  t_eps: 1.0e-3
+
+# -- Inverse problems (all included; experiment.stage selects one) ------------
+methods:
+  inpainting:                  # random pixel inpainting
+    mask_type: random
+    drop_prob: 0.7             # fraction MISSING -> 30% observed
+    mask_channels: shared
+    # FIXED MASK: these two keys together pin ONE mask for train, val and test, so the
+    # operator is a single fixed A -- which is what tau is defined against.
+    same_mask_across_batch: true
+    mask_seed: 42
+    noise: 0.01
+  box_inpainting:              # centered box inpainting
+    mask_type: box
+    block_center: true
+    block_size: 80             # centered 80x80 box
+    mask_channels: shared
+    same_mask_across_batch: false
+    noise: 0.05
+  denoising:                   # no released checkpoint; the code supports it
+    noise: 0.2
+  blur_gauss:
+    sigma_blur: 3.0
+    kernel_size: 61
+    dim_image: 256
+    num_channels: 3
+    noise: 0.05
+  sr:
+    sf: 4                      # 4x box decimation
+    dim_image: 256
+    noise: 0.05
+
+# -- Model architecture ------------------------------------------------------
+model:
+  resume_path:
+  in_ch: 3
+  out_ch: 3
+  input_height: 256
+  # 110.5M params. Memory here is ACTIVATION-dominated, not parameter-dominated, and
+  # activations scale with SPATIAL size -- so widening the DEEP levels (16x16 and 8x8,
+  # i.e. 1/256 and 1/1024 of the pixels) is nearly free, while width at 256x256 and
+  # 128x128 is what costs. Gradient checkpointing is NOT available as an escape:
+  # torch.utils.checkpoint raises "You must implement the jvp function for custom
+  # autograd.Function" under torch.func.jvp, so the activation ceiling is hard.
+  ch: 64
+  ch_mult: [1, 2, 4, 4, 8, 8]     # 6 levels: 256 -> 128/64/32/16/8
+  # Attention at 32 AND 16. The hand-written (JVP-safe, no flash) attention materialises a
+  # 1024x1024 matrix per image per layer at 32x32 (4.2 MB vs 0.26 MB at 16x16); at bs=2
+  # that is affordable, and it is where most of the semantic mixing happens at 256px.
+  attn_resolutions: [32, 16]
+  num_res_blocks: 2
+  dropout: 0.1                 # 110.5M params over 5,153 training images
+  resamp_with_conv: True
+  cond_r: true
+  cond_sigma: true
+  sigma_emb_scale: 10.0
+
+# -- Sampling ----------------------------------------------------------------
+sample:
+  steps: 1                     # SNaP steps k (1 = one-step)

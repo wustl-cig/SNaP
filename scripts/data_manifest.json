@@ -1,0 +1,79 @@
+{
+  "_comment": "Expected contents of a correct dataset install; see scripts/download_data.py.",
+  "celeba": {
+    "train": {
+      "count": 162770,
+      "names_sha256": "ab33facd0770a5ef98af8c0d5a3e083b5a703fac4ffbc7b0a4d5f3531dc77b17",
+      "first": "000001.jpg",
+      "last": "162770.jpg",
+      "samples": {
+        "000001.jpg": "25dab950d4af019655d4f8b702575fe3935c9575b8f3c76a1d6c9d80449a64e9",
+        "054257.jpg": "885925cea47ed4f64a3e6a7414598825e1bf45ccabc4fed3c8f88c1d690abf12",
+        "108514.jpg": "61fbe9cacf1fb4359ee8562b8744365e0c16c7cd7bc53586f208fbddab7fc950",
+        "162770.jpg": "e097fa1ad7a094df0ba4c6875d3676cc0eee71b567c4641856a4328dc23ddcfd"
+      }
+    },
+    "validation": {
+      "count": 19867,
+      "names_sha256": "6aef4696b3f828113cc09961f83c94363c29c2dfcbf231a23c98cfde14dc1301",
+      "first": "162771.jpg",
+      "last": "182637.jpg",
+      "samples": {
+        "162771.jpg": "d4c22c5d081db1019ee24118179ed50fd7fd4e51bf79a268de0a1570c1eec9e2",
+        "169393.jpg": "7cbde314355ea2b84f5f97587a1a539f6ad0d9ae16a8ffd97787235e9208db49",
+        "176015.jpg": "22166b22ddb25f34ba183c8e90676641fac75601f9decece08fdc40dbd715218",
+        "182637.jpg": "bad84e7b65d3fdff75fbc99199824d3c1cdd57a53b2f2dddc21d378dfb9a8e07"
+      }
+    },
+    "test": {
+      "count": 19962,
+      "names_sha256": "ef5746525fa4a9b2c77f8617e6f00e4584dc21ae79d8fabe3195807b15feac47",
+      "first": "182638.jpg",
+      "last": "202599.jpg",
+      "samples": {
+        "182638.jpg": "ecdaa221865cad0aff8015530df197658208a79208c9c6c20313f1594fc7acec",
+        "189292.jpg": "d2d0c9f0751c036648157159cd9e3ffcefcd56190f801e4f49d5fde7529257fd",
+        "195945.jpg": "ffa1b5dd53e1579d13078309535826ba675f242d5addbd3fce9f3e3316e553ef",
+        "202599.jpg": "b46440bda9dbe7648a3649ef980a77874f7bfc048ceee07e18ca139fbf9582ce"
+      }
+    }
+  },
+  "afhq_cat": {
+    "train": {
+      "count": 5153,
+      "names_sha256": "ee21c6d4e2f21b0c32ec84503e800d0b3acffda2f5605fb2a8f5b81d1a0d6bd0",
+      "first": "flickr_cat_000002.jpg",
+      "last": "pixabay_cat_004834.jpg",
+      "samples": {
+        "flickr_cat_000002.jpg": "671a82976c1425025c3911ddc905fb9f471868f97e832a132bef39a1347f4696",
+        "pixabay_cat_001100.jpg": "dbfcf631e7d7e7bb4fc6927468822b902e75243bcaa6a812fce758892152d5fa",
+        "pixabay_cat_002956.jpg": "eea04784d3a7182136c363bf492bfa519077fe4fb821c4cf3ea689337c486134",
+        "pixabay_cat_004834.jpg": "ca823b414de44f02f89a8d52805bb458c8795fdce1e35249d51fe6f4c03c4928"
+      }
+    },
+    "validation": {
+      "count": 500,
+      "names_sha256": "e7f4e61badd8a737ca53750522f57a91e934822e170a665ca145a6791c25308d",
+      "first": "flickr_cat_000008.jpg",
+      "last": "pixabay_cat_004832.jpg",
+      "samples": {
+        "flickr_cat_000008.jpg": "aa96f7e972739d2bd6657c4f81c70f63b4ee862118069f85f07152e150c04cb3",
+        "pixabay_cat_000801.jpg": "88bb4158a9a3cffb20850c08f81bbba18c37e196d4022b2e28d10361e4ffb427",
+        "pixabay_cat_002883.jpg": "08d967ac60e64c420d388224380f3f991cac82251a11b83aaff31195a5dae93c",
+        "pixabay_cat_004832.jpg": "379bf9c2a4a85f600cad54aba1c5cb2e278538902f9f8e52b0146b16f08946a2"
+      }
+    },
+    "test": {
+      "count": 100,
+      "names_sha256": "cfeb1b061b168fc2ca29e49deab9deab5e59964b5fda5ad60a659e6763c498a2",
+      "first": "flickr_cat_000008.jpg",
+      "last": "pixabay_cat_000108.jpg",
+      "samples": {
+        "flickr_cat_000008.jpg": "aa96f7e972739d2bd6657c4f81c70f63b4ee862118069f85f07152e150c04cb3",
+        "flickr_cat_000287.jpg": "48bbb42651be1729ba67dd14d89ee30f31915db1790101832cb46ff6deb1d802",
+        "flickr_cat_000608.jpg": "8d288ad5d3506ab37677af05eba037da540e0f4092021f59003fab5b60937e69",
+        "pixabay_cat_000108.jpg": "6a14f2bc5a85b071633dec5b23ee6e4e6b38e2c0d75e28c6cba0863f906ce237"
+      }
+    }
+  }
+}

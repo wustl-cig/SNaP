@@ -1,0 +1,140 @@
+# ============================================================================
+# SNaP -- CelebA (128x128).
+#
+# These are the settings the released CelebA checkpoints were trained with, so
+#     python run.py --config configs/celeba.yaml --set experiment.stage=sr snap.tau=0.1
+# retrains `celeba_sr` from scratch. One config, all operators: pick the problem with
+# experiment.stage, and set snap.tau to that operator's value from the table below.
+#
+#   stage            tau     use_ema   released checkpoint
+#   inpainting       0.10    false     celeba_inpaint
+#   box_inpainting   0.30    false     celeba_box
+#   blur_gauss       0.15    true      celeba_deblur
+#   sr               0.10    false     celeba_sr
+#
+#   python run.py --config configs/celeba.yaml \
+#       --set experiment.stage=box_inpainting snap.tau=0.3 experiment.run_id=my_box
+# ============================================================================
+experiment:
+  stage: "inpainting"          # inpainting | box_inpainting | denoising | blur_gauss | sr
+  phase: "train"               # train | test
+  seed: 42
+  run_id:                      # blank -> timestamp
+
+paths:
+  output_root: "./results"     # runs land in <output_root>/<stage>/<phase>/<run_id>
+
+data:
+  root: "./data/celeba"        # python scripts/download_data.py celeba
+  size: 128
+  grayscale: false
+  normalize: true              # map to [-1, 1]
+  center_crop: true
+  crop_size: 178
+  max_len:                     # cap images per split (null = all)
+
+dataloader:
+  batch_size: 8                # PER-GPU (effective = batch_size x grad_accum_steps x #gpus)
+  num_workers: 4
+  pin_memory: false
+  shuffle_train: true
+
+distributed:
+  use_ddp: true                # auto-forced for >1 GPU; manual data-parallel in stage.py
+  backend: "nccl"
+  gpus: [0, 1, 2, 3]
+  master_addr: "localhost"
+  master_port: 42266
+
+logging:
+  log_every: 1                 # epochs between metric lines (and the validation pass)
+  validate: false              # false -> the epoch metrics come from a fixed batch of
+                               # TRAINING images and nothing touches the validation set
+  save_every: 5
+  save_img_every: 5
+  keep_last_n: 0               # 0 = never rotate: keep every save_every-th checkpoint
+  val_seed: 1234               # fixed seed for the validation pass -> a comparable curve
+
+training:
+  epochs: 200                  # also the cosine horizon (T_max): stopping early leaves
+                               # the lr un-annealed and is worse than a shorter schedule
+  steps_per_epoch: 1000        # GLOBAL micro-batches per epoch, split across ranks
+  lr: 2.0e-4
+  lr_min: 1.0e-6
+  lr_schedule: cosine
+  weight_decay: 1.0e-4
+  grad_clip: 1.0
+  grad_accum_steps: 1          # micro-batches per optimizer step
+  use_ema: false               # true only for blur_gauss among the released models
+  ema_decay: 0.9999
+  ema_start_epoch: 4
+
+# -- SNaP objective ------------------------------------------------------
+snap:
+  source: posterior           # posterior = measurement-dependent N(m_y, tau^2 W); gaussian = ablation N(0, tau^2 I)
+  cond_anchor: aty            # network conditioning: aty = A^T y (plain adjoint) | m_y = A^T(AA^T+lam I)^-1 y.
+                              # With aty the network input does not depend on tau, so tau
+                              # is purely the source scale.
+  tau: 0.1                    # PER-OPERATOR -- see the table at the top of this file
+  p_ratio: 0.5                # fraction of samples with r=t; the rest take the r<t average-velocity branch
+  corner_frac: 0.1            # ADDITIVE: this fraction of the r!=t samples is placed at the
+                              # (r~0, t~1) corner -- the exact slice one-step sampling evaluates at
+  logit_mu: 0.0               # t ~ logit-normal(logit_mu, logit_sigma)
+  logit_sigma: 1.0
+  weight_p: 1.0               # adaptive weight w = (m + c)^-p on the per-sample residual m
+  weight_c: 1.0e-3
+  weight_norm: ema            # normalise m by its running mean first, so c is dimensionless
+  weight_norm_decay: 0.99
+  beta: 0.0                   # whitened-metric strength; 0 = plain MSE. Kept at 0 for every
+                              # released model (the whitened metric did not help).
+  gamma_max: 10000.0          # cap on gamma = beta/lambda; a safety valve for the sigma->0 tail only
+  t_eps: 1.0e-3               # floor on t in u = (z - net(.))/t
+
+# -- Inverse problems (all included; experiment.stage selects one) ------------
+methods:
+  inpainting:                  # random pixel inpainting
+    mask_type: random
+    drop_prob: 0.7             # fraction of pixels MISSING (70%)
+    mask_channels: shared
+    same_mask_across_batch: true
+    mask_seed: 42              # with same_mask_across_batch: ONE fixed mask for train/val/test
+    noise: 0.01                # sigma
+  box_inpainting:              # centered box inpainting
+    mask_type: box
+    block_center: true
+    block_size: 40             # centered 40x40 box
+    mask_channels: shared
+    same_mask_across_batch: false
+    noise: 0.05
+  denoising:                   # no released checkpoint; the code supports it
+    noise: 0.2
+  blur_gauss:
+    sigma_blur: 1.0
+    kernel_size: 61            # 61x61 Gaussian kernel, circular (FFT)
+    dim_image: 128
+    num_channels: 3
+    noise: 0.05
+  sr:
+    sf: 2                      # 2x box decimation
+    dim_image: 128
+    noise: 0.05
+
+# -- Model architecture ------------------------------------------------------
+model:
+  resume_path:                 # checkpoint to resume training from
+  in_ch: 3
+  out_ch: 3
+  input_height: 128
+  ch: 64
+  ch_mult: [1, 2, 2, 2]
+  num_res_blocks: 2
+  attn_resolutions: [16]
+  dropout: 0.0
+  resamp_with_conv: True
+  cond_r: true                 # condition on the second MeanFlow time r
+  cond_sigma: true             # condition on the measurement noise level sigma_n
+  sigma_emb_scale: 10.0
+
+# -- Sampling ----------------------------------------------------------------
+sample:
+  steps: 1                     # SNaP steps k (1 = one-step)

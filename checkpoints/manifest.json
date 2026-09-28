@@ -1,0 +1,417 @@
+{
+  "_comment": "Checkpoint index for scripts/download_checkpoints.py. Set `base_url` to wherever the .pt files are served from; the downloader fetches <base_url>/<file> and verifies sha256.",
+  "base_url": "https://huggingface.co/ShirinShouhstari/snap-weights/resolve/main",
+  "models": {
+    "celeba_inpaint": {
+      "file": "celeba_inpaint.pt",
+      "sha256": "e6d6e1e4401d7f0bd49fea5be9ec3035ba5732f6acc0f1878f15e6d89d73e111",
+      "size": 36604146,
+      "config": "configs/pretrained/celeba_inpaint.yaml",
+      "stage": "inpainting",
+      "dataset": "celeba",
+      "epoch": 149,
+      "weights": "model",
+      "source": "celeba/meanflow_inpainting.pt",
+      "description": "CelebA 128 - random inpainting, 70% pixels missing, sigma=0.01",
+      "metrics": {
+        "n": 100,
+        "psnr_in": 11.96,
+        "M1": [
+          31.978,
+          0.9277,
+          0.0184
+        ],
+        "M4": [
+          33.974,
+          0.9512,
+          0.0157
+        ],
+        "M16": [
+          34.646,
+          0.9577,
+          0.018
+        ],
+        "M100": [
+          34.842,
+          0.9596,
+          0.0191
+        ]
+      }
+    },
+    "celeba_box": {
+      "file": "celeba_box.pt",
+      "sha256": "be141a45e381e1ff58f100f51b97d13e93060dfd2cb32e94d96ccf88c078e06c",
+      "size": 36604146,
+      "config": "configs/pretrained/celeba_box.yaml",
+      "stage": "box_inpainting",
+      "dataset": "celeba",
+      "epoch": 183,
+      "weights": "model",
+      "source": "celeba/meanflow_box_inpainting.pt",
+      "description": "CelebA 128 - centered 40x40 box inpainting, sigma=0.05",
+      "metrics": {
+        "n": 100,
+        "psnr_in": 22.33,
+        "M1": [
+          30.731,
+          0.9341,
+          0.0212
+        ],
+        "M4": [
+          32.783,
+          0.9535,
+          0.0186
+        ],
+        "M16": [
+          33.429,
+          0.9589,
+          0.0207
+        ],
+        "M100": [
+          33.693,
+          0.9606,
+          0.0221
+        ]
+      }
+    },
+    "celeba_deblur": {
+      "file": "celeba_deblur.pt",
+      "sha256": "5284ed7902a62a5044ba6be6cfa9409be734aed04f9858b625cade7337f59d08",
+      "size": 73207890,
+      "config": "configs/pretrained/celeba_deblur.yaml",
+      "stage": "blur_gauss",
+      "dataset": "celeba",
+      "epoch": 200,
+      "weights": "ema",
+      "source": "celeba/meanflow_blur_gauss.pt",
+      "description": "CelebA 128 - Gaussian deblurring, sigma_b=1.0, k=61, sigma=0.05",
+      "metrics": {
+        "n": 100,
+        "psnr_in": 27.24,
+        "M1": [
+          32.919,
+          0.9193,
+          0.019
+        ],
+        "M4": [
+          34.98,
+          0.9465,
+          0.0215
+        ],
+        "M16": [
+          35.682,
+          0.9537,
+          0.0275
+        ],
+        "M100": [
+          35.909,
+          0.9558,
+          0.0301
+        ]
+      }
+    },
+    "celeba_sr": {
+      "file": "celeba_sr.pt",
+      "sha256": "93f08b3d4a69e7cfb1f9d945cca5a1c265a0c7487197aeab3ed6b035f54c62eb",
+      "size": 36604146,
+      "config": "configs/pretrained/celeba_sr.yaml",
+      "stage": "sr",
+      "dataset": "celeba",
+      "epoch": 180,
+      "weights": "model",
+      "source": "celeba/meanflow_sr.pt",
+      "description": "CelebA 128 - 2x super-resolution, sigma=0.05",
+      "metrics": {
+        "n": 100,
+        "psnr_in": 11.68,
+        "M1": [
+          31.271,
+          0.9032,
+          0.0232
+        ],
+        "M4": [
+          33.268,
+          0.9349,
+          0.0237
+        ],
+        "M16": [
+          33.953,
+          0.9438,
+          0.029
+        ],
+        "M100": [
+          34.161,
+          0.9464,
+          0.0313
+        ]
+      }
+    },
+    "afhq_inpaint": {
+      "file": "afhq_inpaint.pt",
+      "sha256": "0bb156f6756449520fb715b112c23d0457b67fc99235b37c9e2df30deb8f7d2f",
+      "size": 442343744,
+      "config": "configs/pretrained/afhq_inpaint.yaml",
+      "stage": "inpainting",
+      "dataset": "afhq_cat",
+      "epoch": 80,
+      "weights": "model",
+      "source": "afhq/meanflow_inpainting.pt",
+      "description": "AFHQ-Cat 256 - random inpainting, 70% pixels missing, sigma=0.01",
+      "metrics": {
+        "n": 100,
+        "psnr_in": 13.25,
+        "M1": [
+          30.486,
+          0.8536,
+          0.0664
+        ],
+        "M16": [
+          33.047,
+          0.9097,
+          0.0564
+        ],
+        "M100": [
+          33.252,
+          0.9133,
+          0.0586
+        ]
+      }
+    },
+    "afhq_box": {
+      "file": "afhq_box.pt",
+      "sha256": "2386c19fd25011aa7de30ce1e5c7731e82e6810e86a9698e40a3ca6e22a8846b",
+      "size": 442341688,
+      "config": "configs/pretrained/afhq_box.yaml",
+      "stage": "box_inpainting",
+      "dataset": "afhq_cat",
+      "epoch": 80,
+      "weights": "model",
+      "source": "afhq/meanflow_box_inpainting.pt",
+      "description": "AFHQ-Cat 256 - centered 80x80 box inpainting, sigma=0.05",
+      "metrics": {
+        "n": 100,
+        "psnr_in": 21.57,
+        "M1": [
+          26.468,
+          0.8916,
+          0.054
+        ],
+        "M16": [
+          29.329,
+          0.9227,
+          0.0566
+        ],
+        "M100": [
+          29.539,
+          0.9253,
+          0.0691
+        ]
+      }
+    },
+    "afhq_deblur": {
+      "file": "afhq_deblur.pt",
+      "sha256": "4c713af1a995061df8a283a329bce14e682c24b276e3612e8e4ef8bbb54f1b88",
+      "size": 442343230,
+      "config": "configs/pretrained/afhq_deblur.yaml",
+      "stage": "blur_gauss",
+      "dataset": "afhq_cat",
+      "epoch": 80,
+      "weights": "model",
+      "source": "afhq/meanflow_blur_gauss.pt",
+      "description": "AFHQ-Cat 256 - Gaussian deblurring, sigma_b=3.0, k=61, sigma=0.05",
+      "metrics": {
+        "n": 100,
+        "psnr_in": 23.58,
+        "M1": [
+          26.249,
+          0.6744,
+          0.1596
+        ],
+        "M16": [
+          29.098,
+          0.7798,
+          0.2315
+        ],
+        "M100": [
+          29.328,
+          0.7889,
+          0.3201
+        ]
+      }
+    },
+    "afhq_sr": {
+      "file": "afhq_sr.pt",
+      "sha256": "01b99a63159441830f2ce9736eb63cd0882b44f877150856681ef82f370fcc3b",
+      "size": 442340598,
+      "config": "configs/pretrained/afhq_sr.yaml",
+      "stage": "sr",
+      "dataset": "afhq_cat",
+      "epoch": 120,
+      "weights": "model",
+      "source": "afhq/meanflow_sr.pt",
+      "description": "AFHQ-Cat 256 - 4x super-resolution, sigma=0.05",
+      "metrics": {
+        "n": 100,
+        "psnr_in": 11.97,
+        "M1": [
+          26.075,
+          0.7036,
+          0.1307
+        ],
+        "M16": [
+          28.777,
+          0.8029,
+          0.1573
+        ],
+        "M100": [
+          28.993,
+          0.8106,
+          0.187
+        ]
+      }
+    },
+    "brain_r4_20db": {
+      "file": "brain_r4_20db.pt",
+      "sha256": "75c94f6fffdf8c9654a0f5d0c00702b215cc4d7b3ea37993687c64e606a40e14",
+      "size": 163182538,
+      "config": "configs/pretrained/brain_r4_20db.yaml",
+      "stage": "cs_mri",
+      "dataset": "fastmri_brain",
+      "epoch": 70,
+      "weights": "model",
+      "source": "mri/meanflow_4x_20.pt",
+      "description": "fastMRI brain - multi-coil CS-MRI, R=4, 20 dB",
+      "metrics": {
+        "n": 100,
+        "metric": "psnr_dr/ssim_dr",
+        "psnr_in": 25.35,
+        "M1": [
+          32.068,
+          0.8895,
+          null
+        ],
+        "M4": [
+          32.68,
+          0.9047,
+          null
+        ],
+        "M16": [
+          32.852,
+          0.9084,
+          null
+        ],
+        "M100": [
+          32.903,
+          0.9094,
+          null
+        ]
+      }
+    },
+    "brain_r4_30db": {
+      "file": "brain_r4_30db.pt",
+      "sha256": "4eee5fac04e2508bacaf6a42b48d4a9118c31d923667e927e9dd2d903706fa67",
+      "size": 163182538,
+      "config": "configs/pretrained/brain_r4_30db.yaml",
+      "stage": "cs_mri",
+      "dataset": "fastmri_brain",
+      "epoch": 70,
+      "weights": "model",
+      "source": "mri/meanflow_4x_30.pt",
+      "description": "fastMRI brain - multi-coil CS-MRI, R=4, 30 dB",
+      "metrics": {
+        "n": 100,
+        "metric": "psnr_dr/ssim_dr",
+        "psnr_in": 25.61,
+        "M1": [
+          32.89,
+          0.8992,
+          null
+        ],
+        "M4": [
+          33.801,
+          0.9196,
+          null
+        ],
+        "M16": [
+          34.058,
+          0.9246,
+          null
+        ],
+        "M100": [
+          34.128,
+          0.9259,
+          null
+        ]
+      }
+    },
+    "brain_r8_20db": {
+      "file": "brain_r8_20db.pt",
+      "sha256": "a7582732aa7d7d9d8878a6d5b7a5154a91f6da492d6343b0ef42f41c3a2805c1",
+      "size": 163182538,
+      "config": "configs/pretrained/brain_r8_20db.yaml",
+      "stage": "cs_mri",
+      "dataset": "fastmri_brain",
+      "epoch": 70,
+      "weights": "model",
+      "source": "mri/meanflow_8x_20.pt",
+      "description": "fastMRI brain - multi-coil CS-MRI, R=8, 20 dB",
+      "metrics": {
+        "n": 100,
+        "metric": "psnr_dr/ssim_dr",
+        "psnr_in": 21.85,
+        "M1": [
+          28.109,
+          0.8187,
+          null
+        ],
+        "M4": [
+          29.066,
+          0.844,
+          null
+        ],
+        "M16": [
+          29.346,
+          0.8506,
+          null
+        ]
+      }
+    },
+    "brain_r8_30db": {
+      "file": "brain_r8_30db.pt",
+      "sha256": "8ed1b1c410c91e8d1bf0c94602fb93b8429e5849883c66feae1bca14108fe10b",
+      "size": 163182538,
+      "config": "configs/pretrained/brain_r8_30db.yaml",
+      "stage": "cs_mri",
+      "dataset": "fastmri_brain",
+      "epoch": 70,
+      "weights": "model",
+      "source": "mri/meanflow_8x_30.pt",
+      "description": "fastMRI brain - multi-coil CS-MRI, R=8, 30 dB",
+      "metrics": {
+        "n": 100,
+        "metric": "psnr_dr/ssim_dr",
+        "psnr_in": 22.0,
+        "M1": [
+          29.123,
+          0.8451,
+          null
+        ],
+        "M4": [
+          29.888,
+          0.8651,
+          null
+        ],
+        "M16": [
+          30.096,
+          0.8699,
+          null
+        ],
+        "M100": [
+          30.152,
+          0.8712,
+          null
+        ]
+      }
+    }
+  }
+}

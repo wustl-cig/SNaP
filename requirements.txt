@@ -1,0 +1,11 @@
+# Core (training, evaluation, demo)
+torch>=2.1
+torchvision
+torchmetrics
+numpy
+pyyaml
+pillow
+tqdm
+lpips            # perceptual metric used in reporting only
+
+# MRI extras: pip install -r requirements-mri.txt
