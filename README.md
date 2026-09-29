@@ -196,7 +196,7 @@ the same objective cover inpainting and multi-coil MRI.
 <!-- TODO(before publishing): fill in the author list, title, venue and arXiv id. -->
 
 ```bibtex
-@article{TODO_KEY,
+@article{shoushtari2026snap,
   title   = {SNaP: One-Step Posterior Sampling for Noisy Inverse Problem},
   author  = {Shirin Shoushtari, Edward P. Chandler,  Xiao Shi, Ulugbek S. Kamilov},
   journal = {arXiv preprint arXiv:2609.34071},
