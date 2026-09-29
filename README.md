@@ -16,7 +16,6 @@ are all handled by the same objective and the same network.
 by `python demo.py --model afhq_box --n 3 --M 4`. Images: AFHQ (CC BY-NC 4.0).*
 
 ```bash
-git clone https://github.com/<OWNER>/<REPO> && cd <REPO>
 pip install -r requirements.txt
 python scripts/download_data.py celeba            # 1.4 GB, into data/celeba
 python scripts/download_checkpoints.py --group celeba   # 175 MB, into checkpoints/
@@ -198,9 +197,9 @@ the same objective cover inpainting and multi-coil MRI.
 
 ```bibtex
 @article{TODO_KEY,
-  title   = {TODO: paper title},
-  author  = {TODO: Author, First and Coauthor, Second},
-  journal = {arXiv preprint arXiv:TODO},
+  title   = {SNaP: One-Step Posterior Sampling for Noisy Inverse Problem},
+  author  = {Shirin Shoushtari, Edward P. Chandler,  Xiao Shi, Ulugbek S. Kamilov},
+  journal = {arXiv preprint arXiv:2609.34071},
   year    = {2026}
 }
 ```
